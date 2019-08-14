@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <default>
+        <reference name="head">
+            <action method="addJs"><script>ajaxcart/jquery-1.10.2.js</script></action>
+            <action method="addJs"><script>ajaxcart/noconflict.js</script></action>
+        </reference>
+    </default>
+    <catalog_product_view>
+        <reference name="head">
+            <action method="addJs"><script>productlocator/jquery.fancybox.pack.js</script></action>
+            <action method="addJs"><script>productlocator/jquery.ui.map.js</script></action>
+            <action method="addCss"><script>css/productlocator/jquery.fancybox.css</script></action>
+            <action method="addItem"><type>skin_css</type><name>css/productlocator/productlocator.css</name><params/></action>
+        </reference>
+        <reference name="left">
+            <block type="productlocator/map" name="locator" as="locator" template="productlocator/locator.phtml" />
+        </reference>
+    </catalog_product_view>
+    <productlocator_index_index translate="label">
+        <remove name="head" />
+        <remove name="header" />
+        <remove name="footer" />
+    </productlocator_index_index>
+</layout>

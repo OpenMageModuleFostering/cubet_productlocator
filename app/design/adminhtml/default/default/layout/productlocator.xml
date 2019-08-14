@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <adminhtml_catalog_product_edit>
+        <reference name="head">
+            <action method="addJs"><script>productlocator/jquery-1.10.2.js</script></action>
+            <action method="addJs"><script>productlocator/noconflict.js</script></action>
+            <action method="addItem"><type>skin_css</type><name>css/productlocator/productlocator.css</name><params/></action>
+        </reference>
+        <reference name="product_tabs">
+            <action method="addTab">
+                <name>product_locator_tab</name>
+                <block>productlocator/adminhtml_catalog_product_edit_tab_productlocator</block>
+            </action>
+        </reference>
+    </adminhtml_catalog_product_edit>
+</layout>

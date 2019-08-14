@@ -1,0 +1,175 @@
+<?php
+$config = Mage::getStoreConfig('productlocator/map');
+$sensor = ($config['sensor'] ? 'true' : 'false');
+?>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=<?php echo $config['key']; ?>&sensor=<?php echo $sensor; ?>&libraries=places"></script>
+<div class="entry-edit">
+    <div class="entry-edit-head">
+        <h4>Location of Product</h4>
+    </div>
+    <?php
+    $product = Mage::registry('current_product');
+    $isloc = Mage::getModel('productlocator/locator')->checklocation($product->getId());
+    if ($isloc == 0):
+        $lat = '';
+        $lon = '';
+    else:
+        $lat = $isloc[0]['latitude'];
+        $lon = $isloc[0]['longitude'];
+    endif;
+    ?>
+    <div class="fieldset fieldset-wide" style="min-height: 530px;">
+        <span>Enter your location:</span>
+        <input style="width:580px;" class="location" id="searchTextField" autocomplete="off" />
+        <div id="map-direction" class="mapdirection" style="width: 700px; height: 400px; top: 10px;"></div>
+        <div class="hor-scroll">
+            <label for="name">
+                Latitude
+            </label>
+            <input type="text" class=""  name="" id="latitude" value="<?php echo $lat; ?>">
+            <label for="name">
+                Longitude
+            </label>
+            <input type="text" class=""  name="" id="longitude" value="<?php echo $lon; ?>">
+            <br><br>
+            <button style="" class="scalable save" type="button" title="Save Location" id="save_location"><span><span><span>Save Location</span></span></span></button>
+        </div>
+    </div>
+</div>  
+<script type="text/javascript">
+
+    jQuery(document).ready(function() {
+        jQuery('#product_info_tabs_product_locator_tab').click(function() {
+            initialize();
+        });
+    });
+    document.observe('dom:loaded', function() {
+        var BASE_URL = '<?php echo Mage::getBaseUrl(); ?>';
+        $('save_location').observe('click', respondToClick);
+        jQuery('.save').click(function() {
+            respondToClick();
+        });
+        function respondToClick(event) {
+            var latitude = document.getElementById("latitude").getValue();
+            var longitude = document.getElementById("longitude").getValue();
+            var pid = '<?php echo $product->getId(); ?>';
+            url = BASE_URL + 'productlocator/index/locationsave?pid=' + pid + '&lat=' + latitude + '&lon=' + longitude;
+            new Ajax.Request(url, {
+                method: 'get',
+                onSuccess: function(res) {
+                }
+            });
+        }
+    });
+    var map;
+    var marker;
+    function initialize()
+    {
+        var myCenter = new google.maps.LatLng('<?php echo $lat; ?>', '<?php echo $lon; ?>');
+        var mapOptions = {
+            center: myCenter,
+            zoom: 2,
+            mapTypeControl: false,
+            draggable: true,
+            scaleControl: false,
+            scrollwheel: true,
+            navigationControl: false,
+            streetViewControl: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map-direction"),
+                mapOptions);
+
+        placeMarker(myCenter);
+        var input = /** @type {HTMLInputElement} */(document.getElementById('searchTextField'));
+        var autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.bindTo('bounds', map);
+        google.maps.event.addListener(autocomplete, 'place_changed', function() {
+            input.className = '';
+            var place = autocomplete.getPlace();
+            if (!place.geometry) { // Inform the user that the place was not found and return.       
+                input.className = 'notfound';
+                return;
+            }
+            // If the place has a geometry, then present it on a map.     
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);  // Why 17? Because it looks good.    
+            }
+            if (!marker) {
+                placeMarker(place.geometry.location);
+            }
+            marker.setPosition(place.geometry.location);
+            marker.setVisible(true);
+
+
+        });
+
+        map.setTilt(0);
+        map.panTo(myCenter);
+        google.maps.event.addListener(map, 'click', function(event) {
+            computepos(event.latLng);
+            placeMarker(event.latLng);
+        });
+    }
+    function placeMarker(location) {
+        if (marker) {
+            marker.setPosition(location);
+        } else {
+            marker = new google.maps.Marker({
+                position: location,
+                animation: google.maps.Animation.DROP,
+                draggable: true
+            });
+        }
+
+        marker.setMap(map);
+        google.maps.event.addListener(marker, 'dragend', function(event) {
+            computepos(event.latLng);
+
+        });
+
+    }
+
+    function computepos(point)
+    {
+        geocoder = new google.maps.Geocoder();
+        var latA = Math.abs(Math.round(point.lat() * 1000000.));
+        var lonA = Math.abs(Math.round(point.lng() * 1000000.));
+        if (point.lat() < 0)
+        {
+            var ls = '-' + Math.floor((latA / 1000000)).toString();
+        }
+        else
+        {
+            var ls = Math.floor((latA / 1000000)).toString();
+        }
+        var lm = Math.floor(((latA / 1000000) - Math.floor(latA / 1000000)) * 60).toString();
+        var ld = (Math.floor(((((latA / 1000000) - Math.floor(latA / 1000000)) * 60) - Math.floor(((latA / 1000000) - Math.floor(latA / 1000000)) * 60)) * 100000) * 60 / 100000).toString();
+        if (point.lng() < 0)
+        {
+            var lgs = '-' + Math.floor((lonA / 1000000)).toString();
+        }
+        else
+        {
+            var lgs = Math.floor((lonA / 1000000)).toString();
+        }
+        var lgm = Math.floor(((lonA / 1000000) - Math.floor(lonA / 1000000)) * 60).toString();
+        var lgd = (Math.floor(((((lonA / 1000000) - Math.floor(lonA / 1000000)) * 60) - Math.floor(((lonA / 1000000) - Math.floor(lonA / 1000000)) * 60)) * 100000) * 60 / 100000).toString();
+        document.getElementById("latitude").value = point.lat().toFixed(6);
+        document.getElementById("longitude").value = point.lng().toFixed(6);
+        if (geocoder) {
+            var addr;
+            geocoder.geocode({'latLng': point}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    addr = results[0].formatted_address; 
+                    jQuery('#searchTextField').val(addr);
+                }
+            });
+        }
+       
+    }
+    google.maps.event.addDomListener(window, 'load', initialize);
+</script>

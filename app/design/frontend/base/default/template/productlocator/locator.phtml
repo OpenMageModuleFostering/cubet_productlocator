@@ -1,0 +1,228 @@
+<?php
+$config = Mage::getStoreConfig('productlocator/map');
+if ($config['locator'] == '1') {
+    $product = Mage::registry('current_product');
+    $p_name = $product->getName();
+    $isloc = Mage::getModel('productlocator/locator')->checklocation($product->getId());
+    if ($isloc == 0):
+        $lat = '';
+        $lon = '';
+    else:
+        $lat = $isloc[0]['latitude'];
+        $lon = $isloc[0]['longitude'];
+        $sensor = ($config['sensor'] ? 'true' : 'false');
+        ?>
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=<?php echo $config['key']; ?>&sensor=<?php echo $sensor; ?>&libraries=places"></script>
+        <div class="map">
+            <div class="map-title">
+                <strong><span>Location Of Product</span></strong>
+            </div>
+            <span class="location_head">Enter your location </span><br>
+            <span class="location_tip">to get the direction and distance</span>
+            <input style="width:220px;" class="location" onclick="select(this)" id="searchTextField" style="width: 155px;" />
+            <div class="map-details">
+                <strong><span>Distance</span></strong><span id="distance"></span>
+                <a href="#fancy" style="cursor:pointer" class="direction">Get Direction</a>
+            </div>
+            <div id="map-canvas" style="width: 100%; height: 100%;"></div>
+            <div id="fancy" style="display:none;" >
+                <span class="no_map_error" style="display:none;">There is no road route for this location</span>
+                <input type="text" id="loc" onclick="javascript:select(this)">
+                <div id="map-direction" class="mapdirection" style="width: 700px; height: 320px;"></div>
+            </div>
+        </div>
+        <script type="text/javascript">
+
+                //Global Variables 
+                var lat;
+                var lon;
+                var google_map = null;
+                var info_window = null;
+                var directionsDisplay;
+                var address;
+                var flag = 0;
+                var count = 0;
+                var directionsService = new google.maps.DirectionsService();
+
+                // On document ready
+                jQuery(document).ready(function() {
+                    jQuery('.map-details').hide();
+                });
+
+                // On get direction click
+                jQuery('.direction').click(function() {
+                    jQuery('#fancy').css({'display': 'block'});
+                    initialized();
+                    jQuery('.pac-container').each(function(i) {
+                        jQuery(this).css({'z-index': '10000'});
+                    });
+                    jQuery(".direction").fancybox({
+                        afterClose: function() {
+
+                            if (flag == 1) {
+                                directionsDisplay.setMap(null);
+                                flag = 0;
+                            }
+                        },
+                        afterShow: function() {
+                            flag = 1;
+                        }
+                    }); //for fancybox
+
+
+                });
+                // End of function
+                function initialize()
+                {
+                    geocoder = new google.maps.Geocoder();
+
+                    var infwindow = new google.maps.InfoWindow({maxWidth: 150
+                    });
+                    var myCenter = new google.maps.LatLng('<?php echo $lat; ?>', '<?php echo $lon; ?>');
+                    var mapOptions = {
+                        center: myCenter,
+                        zoom: 8,
+                        mapTypeControl: false,
+                        draggable: true,
+                        scaleControl: false,
+                        scrollwheel: true,
+                        navigationControl: false,
+                        streetViewControl: false,
+                        mapTypeId: google.maps.MapTypeId.ROADMAP
+                    };
+                    var map = new google.maps.Map(document.getElementById("map-canvas"),
+                            mapOptions);
+                    var input = /** @type {HTMLInputElement} */(document.getElementById('searchTextField'));
+                    var autocomplete = new google.maps.places.Autocomplete(input);
+                    autocomplete.bindTo('bounds', map);
+                    google.maps.event.addListener(autocomplete, 'place_changed', function() {
+                        input.className = '';
+                        var place = autocomplete.getPlace();
+                        var el = {'value': place.formatted_address};
+                        if (!place.geometry) { // Inform the user that the place was not found and return.       
+                            input.className = 'notfound';
+                            return;
+                        } else {
+                            getLocation(el);
+                        }
+                    });
+
+                    marker = new google.maps.Marker({
+                        position: myCenter,
+                        animation: google.maps.Animation.DROP
+                    });
+                    marker.setMap(map);
+                    var product_name = '<?php echo $p_name; ?>';
+                    var contentString = '<h3>' + product_name + '</h3><h4>';
+                    var addr = new Array();
+
+                    var latlng = marker.getPosition();
+                    if (geocoder) {
+                        geocoder.geocode({'latLng': latlng}, function(results, status) {
+                            if (status == google.maps.GeocoderStatus.OK) {
+                                jQuery.each(results, function(index, key) {
+                                    addr[index] = this.formatted_address;
+                                });
+                                contentString += addr[0] + '</h4>';
+                            }
+                        });
+                    }
+                    google.maps.event.addListener(marker, 'click', function() {
+                        infwindow.setContent(contentString)
+                        infwindow.open(map, marker);
+                    });
+
+                }
+
+
+                google.maps.event.addDomListener(window, 'load', initialize);
+                function getLocation(elem) {
+                    jQuery('.map-details').show();
+                    var BASE_URL = '<?php echo Mage::getBaseUrl(); ?>';
+                    var address = elem.value;
+                    var pr_lat = '<?php echo $lat; ?>';
+                    var pr_lon = '<?php echo $lon; ?>';
+                    geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({'address': address}, function(results, status) {
+                        if (status == google.maps.GeocoderStatus.OK) {
+                            lat = results[0].geometry.location.lat();
+                            lon = results[0].geometry.location.lng();
+                            url = BASE_URL + 'productlocator/index/getdirection';
+                            jQuery.ajax({url: url, type: 'post', data: {'tolat': pr_lat, 'tolon': pr_lon, 'frlat': lat, 'frlon': lon},
+                                success: function(result) {
+                                    jQuery('#distance').html(' ' + result);
+                                }});
+                        } else {
+                            alert("Geocode was not successful for the following reason: " + status);
+                        }
+                    });
+                }
+
+                function initialized() {
+
+                    directionsDisplay = new google.maps.DirectionsRenderer();
+                    var map_options = {
+                        center: new google.maps.LatLng(lat, lon),
+                        zoom: 15,
+                        mapTypeControl: false,
+                        draggable: true,
+                        scaleControl: false,
+                        scrollwheel: true,
+                        navigationControl: false,
+                        streetViewControl: false,
+                        mapTypeId: google.maps.MapTypeId.ROADMAP
+                    };
+                    jQuery('#map-direction').gmap(map_options);
+                    google_map = jQuery('#map-direction').gmap('get', 'map');
+                    var input = /** @type {HTMLInputElement} */(document.getElementById('loc'));
+                    var autocomplete = new google.maps.places.Autocomplete(input);
+                    autocomplete.bindTo('bounds', google_map);
+                    google.maps.event.addListener(autocomplete, 'place_changed', function() {
+                        input.className = '';
+                        var place = autocomplete.getPlace();
+                        var el = {'value': place.formatted_address};
+                        geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({'address': el.value}, function(results, status) {
+                            if (status == google.maps.GeocoderStatus.OK) {
+                                lat = results[0].geometry.location.lat();
+                                lon = results[0].geometry.location.lng();
+                                directionsDisplay.setMap(null);
+                                initialized();
+                            }
+                        }
+                        );
+                    });
+                    directionsDisplay.setMap(google_map);
+                    calcRoute();
+                }
+
+                function calcRoute() {
+
+                    var start = new google.maps.LatLng(lat, lon);
+                    var end = new google.maps.LatLng('<?php echo $lat; ?>', '<?php echo $lon; ?>');
+                    var request = {
+                        origin: start,
+                        destination: end,
+                        travelMode: google.maps.DirectionsTravelMode.DRIVING
+                    };
+                    directionsService.route(request, function(response, status) {
+                        if (status == google.maps.DirectionsStatus.OK) {
+                            directionsDisplay.setDirections(response);
+                            jQuery('.no_map_error').css({'display':'none'});
+                        }
+                        else {
+                            jQuery('.no_map_error').css({'display':'block'});
+                        }
+                    });
+                }
+                
+                function select(id){
+                    document.getElementById(id).select();
+                }
+
+
+        </script> 
+    <?php
+    endif;
+}
+?>
