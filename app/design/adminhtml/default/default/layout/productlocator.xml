@@ -2,7 +2,7 @@
 <layout>
     <adminhtml_catalog_product_edit>
         <reference name="head">
-            <action method="addJs"><script>productlocator/jquery-1.10.2.js</script></action>
+            <action method="addJs"><script>productlocator/jquery-2.1.1.min.js</script></action>
             <action method="addJs"><script>productlocator/noconflict.js</script></action>
             <action method="addItem"><type>skin_css</type><name>css/productlocator/productlocator.css</name><params/></action>
         </reference>

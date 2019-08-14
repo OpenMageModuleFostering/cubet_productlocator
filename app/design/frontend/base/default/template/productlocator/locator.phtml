@@ -81,7 +81,7 @@ if ($config['locator'] == '1') {
                     var myCenter = new google.maps.LatLng('<?php echo $lat; ?>', '<?php echo $lon; ?>');
                     var mapOptions = {
                         center: myCenter,
-                        zoom: 8,
+                        zoom: <?php echo $config['zoom'];?>,
                         mapTypeControl: false,
                         draggable: true,
                         scaleControl: false,
