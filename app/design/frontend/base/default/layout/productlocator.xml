@@ -13,10 +13,7 @@
             <action method="addCss"><script>css/productlocator/jquery.fancybox.css</script></action>
             <action method="addItem"><type>skin_css</type><name>css/productlocator/productlocator.css</name><params/></action>
         </reference>
-        <reference name="left">
-            <block type="productlocator/map" name="locator" as="locator" template="productlocator/locator.phtml" />
-        </reference>
-    </catalog_product_view>
+     </catalog_product_view>
     <productlocator_index_index translate="label">
         <remove name="head" />
         <remove name="header" />

@@ -16,7 +16,7 @@
 <config>
     <modules>
         <Cubet_Productlocator>
-            <version>1.0.0</version>
+            <version>1.0.2</version>
         </Cubet_Productlocator>
     </modules>
     <frontend>
@@ -39,6 +39,9 @@
     </frontend>   
     <global>
         <models>
+            <productlocator_adminhtml>
+                <class>Cubet_Productlocator_Adminhtml_Model</class>
+            </productlocator_adminhtml>
             <productlocator>
                 <class>Cubet_Productlocator_Model</class>
                 <resourceModel>productlocator_mysql4</resourceModel>
@@ -83,15 +86,26 @@
                 <class>Cubet_Productlocator_Block</class>
             </productlocator>
         </blocks>
+        <events>
+            <controller_action_layout_generate_blocks_before>
+                <observers>
+                    <Cubet_Productlocator_Model_Observer>
+                        <type>singleton</type>
+                        <class>Cubet_Productlocator_Model_Observer</class>
+                        <method>set_block</method>
+                    </Cubet_Productlocator_Model_Observer>
+                </observers>
+            </controller_action_layout_generate_blocks_before>     
+        </events>
     </global>
     <adminhtml>
         <layout>
-           <updates>
-               <productlocator>
-                   <file>productlocator.xml</file>
-               </productlocator>
-           </updates>
-       </layout>
+            <updates>
+                <productlocator>
+                    <file>productlocator.xml</file>
+                </productlocator>
+            </updates>
+        </layout>
         <acl>
             <resources>
                 <all>

@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS `cubet_productlocator` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `pid` int(11) NOT NULL,
-  `latitude` varchar(50) DEFAULT NULL,
-  `longitude` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
