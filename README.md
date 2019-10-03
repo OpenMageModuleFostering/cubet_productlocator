@@ -1,3 +1,5 @@
+
+
 ## Original Package Description
 
 This module enables to add location for each product and to show those location on a map in the product detail page.
